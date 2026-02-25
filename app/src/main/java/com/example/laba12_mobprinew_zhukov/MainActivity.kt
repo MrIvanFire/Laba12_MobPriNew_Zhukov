@@ -1,6 +1,7 @@
 package com.example.laba12_mobprinew_zhukov
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Column
@@ -46,9 +47,12 @@ fun NotesScreen() {
 
     var notes by remember { mutableStateOf<List<NoteEntity>>(emptyList()) }
 
-    LaunchedEffect(dao) {
-        dao.getAll().collect { notes = it }
-    }
+    LaunchedEffect(dao)  {
+            dao.getAll().collect { list ->
+                notes = list
+
+            }
+        }
 
     val scope = rememberCoroutineScope()
 
@@ -58,38 +62,53 @@ fun NotesScreen() {
     Column(modifier = Modifier.fillMaxSize()) {
         OutlinedTextField(
             value = title,
-            onValueChange = { title = it },
+            onValueChange = { newValue -> title = newValue },
             label = { Text("Заголовок") },
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true
         )
 
         OutlinedTextField(
             value = content,
-            onValueChange = { content = it },
-            label = { Text("Содержание") },
+            onValueChange = { newValue -> content = newValue },
+            label = { Text("Описание") },
             modifier = Modifier.fillMaxWidth()
         )
 
         Button(
             onClick = {
-                if (title.isNotBlank() && content.isNotBlank()) {
+
+                val currTitle = title
+                val currContent = content
+
+
+                if (currTitle.isNotBlank() && currContent.isNotBlank()) {
                     scope.launch {
-                        dao.insert(NoteEntity(title = title, content = content))
+
+                        val noteToSave = NoteEntity(
+                            title = currTitle,
+                            content = currContent
+                        )
+
+
+                        dao.insert(noteToSave)
                     }
                     title = ""
                     content = ""
+                } else {
                 }
             },
             modifier = Modifier.fillMaxWidth()
         ) {
             Text("Сохранить")
         }
-
         LazyColumn(modifier = Modifier.fillMaxSize()) {
             items(notes) { note ->
                 Column {
-                    Text(text = "ID: ${note.id} | Заголовок: ${note.title}")
-                    Text(text = "Содержание: ${note.content}")
+                    Text(text = "ID: ${note.id} | Заголовок: ${note.title}",
+                        color = androidx.compose.ui.graphics.Color.Black)
+                    Text(text = "Описание: ${note.content}",
+                        color = androidx.compose.ui.graphics.Color.Black)
 
                     Button(onClick = {
                         scope.launch {
